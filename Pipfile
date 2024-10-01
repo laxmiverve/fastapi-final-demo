@@ -1,0 +1,30 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+ultralytics = "*"
+fastapi = "*"
+uvicorn = "*"
+python-multipart = "*"
+sqlalchemy = "*"
+python-dotenv = "*"
+pymysql = "*"
+pytesseract = "*"
+scikit-learn = "*"
+pillow = "*"
+torch = "*"
+scikit-image = "*"
+numpy = "*"
+torchvision = "*"
+transformers = {extras = ["torch"] }
+opencv-python = "*"
+
+[dev-packages]
+
+[requires]
+python_version = "3.10"
+
+[scripts]
+main = "bash -c 'python main.py'"
