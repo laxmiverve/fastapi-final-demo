@@ -1,0 +1,13 @@
+{
+    "object_detected" : "Objects are detected in the image",
+    "object_not_detected" : "Objects are detected in the image",
+    "contextualization_successful": "The text contextualization was successful",
+    "contextualization_failed": "The text contextualization failed",
+    "similar_image" : "The images are considered similar",
+    "not_similar_image" : "The images are not considered similar",
+    "compression_success": "Image compressed successfully",
+    "compression_failed" : "Error during image compression",
+    "image_classification_successful" : "Successfully classified the image",
+    "image_classification_error" : "Error during image classification",
+    "file_format_not_supported" : "File format not supported"
+}
