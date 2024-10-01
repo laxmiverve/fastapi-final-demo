@@ -1,0 +1,11 @@
+.env 
+
+uploads/
+compressed_images/
+predicted_images/
+datasets/
+
+yolov8n.pt
+mobilenet_v2_image_classifier.pth
+mobilenet_v3_image_classifier.pth
+
