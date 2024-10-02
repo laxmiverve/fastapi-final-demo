@@ -14,7 +14,7 @@ def imageDetect(background_tasks: BackgroundTasks, upload_file: UploadFile = Fil
     
     if detected_image == 1:
             return ResponseSchema(status = False, response = msg['file_format_not_supported'], data = None)
-    elif detected_image is not None:
+    elif detected_image:
         return ResponseSchema(status = True, response = msg['object_detected'], data = detected_image)
     else:
         return ResponseSchema(status = False, response = msg['object_not_detected'], data = None)

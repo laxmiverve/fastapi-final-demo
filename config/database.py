@@ -1,5 +1,6 @@
 import os
 import json
+import traceback
 from sqlalchemy import create_engine, MetaData
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
@@ -28,7 +29,12 @@ def getDb():
     try:
         yield db
     except Exception as e:
-        print("Error getting DB session : ", e)
-        return e
+        # Get the traceback as a string
+        traceback_str = traceback.format_exc()
+        print(traceback_str)
+        # Get the line number of the exception
+        line_no = traceback.extract_tb(e.__traceback__)[-1][1]
+        print(f"Exception occurred on line {line_no}")
+        return str(e), e
     finally:
         db.close()

@@ -9,5 +9,10 @@
     "compression_failed" : "Error during image compression",
     "image_classification_successful" : "Successfully classified the image",
     "image_classification_error" : "Error during image classification",
-    "file_format_not_supported" : "File format not supported"
+    "file_format_not_supported" : "File format not supported",
+    "high_confidence" : "The images are considered similar with high confidence",
+    "almost_similar" : "The images are almost similar but not completely the same",
+    "unsure_similarity" : "Not sure if the images are the same or not",
+    "model_train_success" : "Model trained successfully",
+    "model_train_failed" : "Model train failed"
 }

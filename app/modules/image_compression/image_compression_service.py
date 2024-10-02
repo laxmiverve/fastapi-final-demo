@@ -1,5 +1,6 @@
 from datetime import datetime
 import pathlib
+import traceback
 from dotenv import load_dotenv
 from fastapi import UploadFile
 from PIL import Image
@@ -14,14 +15,14 @@ SUPPORTED_FORMATS = {'webp', 'png', 'dng', 'bmp', 'mpo', 'jpeg', 'tiff', 'tif', 
 # Compress the image
 def compressImage(upload_file: UploadFile):
     try:
-        file_extension = os.path.splitext(upload_file.filename)[1][1:].lower()  # Get the file extension without the dot
+        file_extension = os.path.splitext(upload_file.filename)[1][1:].lower() 
         if file_extension not in SUPPORTED_FORMATS:
-            return 1  # Return 1 for unsupported file type
+            return 1  
         
         base_dir = os.getcwd()
         quality = 100
         resize_factor = 0.5
-        step = 5  # Adjust quality in steps
+        step = 5 
 
         image_bytes = upload_file.file.read()
         filename = upload_file.filename
@@ -49,7 +50,7 @@ def compressImage(upload_file: UploadFile):
         while quality > 10:
             # Save image with current quality and check the size
             image.save(output_path, format = image.format, quality = quality, optimize = True, lossless = False)
-            size_kb = os.path.getsize(output_path) / 1024  # Size in KB
+            size_kb = os.path.getsize(output_path) / 1024
 
             if size_kb <= 100:  
                 break
@@ -60,10 +61,19 @@ def compressImage(upload_file: UploadFile):
 
         image_url = f"{BASE_URL}{relative_path}"
 
-        return {
+        response =  {
             "original_image_size_kb": f"{original_image_size_kb:.2f} KB",
             "compressed_image_size_kb": f"{size_kb:.2f} KB",
             "image_url": image_url
         }
+        
+        return response
     except Exception as e:
-        print("An exception occurred:", str(e))
+        # Get the traceback as a string
+        traceback_str = traceback.format_exc()
+        print(traceback_str)
+        # Get the line number of the exception
+        line_no = traceback.extract_tb(e.__traceback__)[-1][1]
+        print(f"Exception occurred on line {line_no}")
+        return str(e)
+

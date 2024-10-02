@@ -1,4 +1,5 @@
 import json
+import traceback
 import torch
 import torch.nn as nn
 import torchvision.transforms as transforms
@@ -6,6 +7,8 @@ from torchvision import models
 from PIL import Image
 from fastapi import UploadFile
 import os
+from app.helper.ai_helper import ImageClassifier
+
 
 SUPPORTED_FORMATS = {'webp', 'png', 'dng', 'bmp', 'mpo', 'jpeg', 'tiff', 'tif', 'pfm', 'jpg'}
 
@@ -14,9 +17,9 @@ model_path = 'mobilenet_v3_image_classifier.pth'
 
 def predictImage(upload_file: UploadFile):
     try:
-        file_extension = os.path.splitext(upload_file.filename)[1][1:].lower()  # Get the file extension without the dot
+        file_extension = os.path.splitext(upload_file.filename)[1][1:].lower()
         if file_extension not in SUPPORTED_FORMATS:
-            return 1  # Return 1 for unsupported file type
+            return 1  
         
         
         # Load the COCO annotations to extract categories
@@ -48,7 +51,7 @@ def predictImage(upload_file: UploadFile):
         ])
         
         image = Image.open(upload_file.file).convert('RGB')
-        image_tensor = transform(image).unsqueeze(0).to(device)  # Add batch dimension
+        image_tensor = transform(image).unsqueeze(0).to(device)  
 
         # Make a prediction
         with torch.no_grad():
@@ -61,7 +64,8 @@ def predictImage(upload_file: UploadFile):
         confidence_score = round(confidence_score, 2)
 
         if predicted_label in category_mapping:
-            predicted_class = category_mapping[predicted_label] # Map category id to category name
+            # Map category id to category name
+            predicted_class = category_mapping[predicted_label] 
         else:
             predicted_class = "Category not found"
         
@@ -71,4 +75,30 @@ def predictImage(upload_file: UploadFile):
         
         return response
     except Exception as e:
-        print("An exception occurred:", str(e))
+        # Get the traceback as a string
+        traceback_str = traceback.format_exc()
+        print(traceback_str)
+        # Get the line number of the exception
+        line_no = traceback.extract_tb(e.__traceback__)[-1][1]
+        print(f"Exception occurred on line {line_no}")
+        return str(e)
+
+
+
+def modelTrainClassification(dataset_path : str, save_model_path: str):
+    try:
+        # Initialize and run the ImageClassifier
+        # dataset_path = 'datasets/image-classify.v1i.coco'
+        classifier = ImageClassifier(dataset_path)
+        classifier.trainModel()
+        classifier.testModel()
+        result = classifier.saveModel(save_model_path)
+        return result
+    except Exception as e:
+        # Get the traceback as a string
+        traceback_str = traceback.format_exc()
+        print(traceback_str)
+        # Get the line number of the exception
+        line_no = traceback.extract_tb(e.__traceback__)[-1][1]
+        print(f"Exception occurred on line {line_no}")
+        return str(e)

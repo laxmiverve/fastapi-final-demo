@@ -1,4 +1,5 @@
 import os
+import traceback
 import cv2
 from ultralytics import YOLO
 from requests import Session
@@ -15,20 +16,24 @@ BASE_URL = os.getenv("BASE_URL")
 
 SUPPORTED_FORMATS = {'webp', 'png', 'dng', 'bmp', 'mpo', 'jpeg', 'tiff', 'tif', 'pfm', 'jpg'}
 
+# build a new model from scratch
+# model = YOLO("yolov8n.yaml") 
 
-# model = YOLO("yolov8n.yaml")  # build a new model from scratch
-model = YOLO("yolov8n.pt")  # load a pretrained model 
+# load a pretrained model 
+model = YOLO("yolov8n.pt") 
 
+# train the model
 # model.train(data="coco128.yaml", epochs = 3)  # train the model
-# metrics = model.val()  # evaluate model performance on the validation set
 
+# evaluate model performance on the validation set
+# metrics = model.val() 
 
 # Detect object in an image
 def imageDetect(background_tasks: BackgroundTasks, upload_file: UploadFile, db: Session):
     try:
-        file_extension = os.path.splitext(upload_file.filename)[1][1:].lower()  # Get the file extension without the dot
+        file_extension = os.path.splitext(upload_file.filename)[1][1:].lower()  
         if file_extension not in SUPPORTED_FORMATS:
-            return 1  # Return 1 for unsupported file type
+            return 1  
         
         # Directory for saving uploaded images
         upload_dir="uploads"
@@ -103,12 +108,19 @@ def imageDetect(background_tasks: BackgroundTasks, upload_file: UploadFile, db: 
         # Add task to background queue
         background_tasks.add_task(processImage)
 
-        predicted_image_url = f"{BASE_URL}{save_dir}/{unique_filename}"  # Placeholder URL
+        predicted_image_url = f"{BASE_URL}{save_dir}/{unique_filename}" 
         response = {
             "image_profile_url": predicted_image_url
         }
 
         return response
     except Exception as e:
-        print("An exception occurred:", str(e))
+        # Get the traceback as a string
+        traceback_str = traceback.format_exc()
+        print(traceback_str)
+        # Get the line number of the exception
+        line_no = traceback.extract_tb(e.__traceback__)[-1][1]
+        print(f"Exception occurred on line {line_no}")
+        return str(e)
+
 

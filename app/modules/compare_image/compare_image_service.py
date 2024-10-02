@@ -1,3 +1,4 @@
+import traceback
 from fastapi import UploadFile
 from PIL import Image
 from io import BytesIO
@@ -6,7 +7,6 @@ import cv2
 import numpy as np
 import os
 
-# Supported image formats
 SUPPORTED_FORMATS = {'webp', 'png', 'dng', 'bmp', 'mpo', 'jpeg', 'tiff', 'tif', 'pfm', 'jpg'}
 
 # Convert the image bytes to a grayscale image using OpenCV
@@ -18,8 +18,13 @@ def preprocessImage(image_bytes):
         gray_image = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
         return gray_image
     except Exception as e:
-        print("An exception occurred during image preprocessing:", str(e))
-        return None  # Return None in case of error
+        # Get the traceback as a string
+        traceback_str = traceback.format_exc()
+        print(traceback_str)
+        # Get the line number of the exception
+        line_no = traceback.extract_tb(e.__traceback__)[-1][1]
+        print(f"Exception occurred on line {line_no}")
+        return str(e)
 
 # Compare images using SSIM (Structural Similarity Index)
 async def compareImages(upload_file1: UploadFile, upload_file2: UploadFile):
@@ -29,9 +34,9 @@ async def compareImages(upload_file1: UploadFile, upload_file2: UploadFile):
 
         for upload_file in uploaded_files:
             # Get the file extension and check if it's supported
-            file_extension = os.path.splitext(upload_file.filename)[1][1:].lower()  # Get the file extension without the dot
+            file_extension = os.path.splitext(upload_file.filename)[1][1:].lower() 
             if file_extension not in SUPPORTED_FORMATS:
-                return 1  # Return 1 for unsupported file type
+                return 1 
             
             image_bytes = await upload_file.read()
             gray_image = preprocessImage(image_bytes)
@@ -50,22 +55,19 @@ async def compareImages(upload_file1: UploadFile, upload_file2: UploadFile):
         similarity, diff = ssim(gray_image1, gray_image2_resized, full=True)
 
         similarity_percentage = similarity * 100
+        similarity_percentage = round(float(similarity_percentage), 2)
 
-        if similarity_percentage > 90:
-            message = "The images are considered similar with high confidence."
-        elif similarity_percentage > 80 and similarity_percentage <= 90:
-            message = "The images are almost similar but not completely the same."
-        elif similarity_percentage > 70 and similarity_percentage <= 80:
-            message = "Not sure if the images are the same or not."
-        else:
-            message = "The images are not considered similar."
-        
-        return {
-            "similarity_score": round(float(similarity_percentage), 2),
-            "message": message
-        }
+        return similarity_percentage
+
     except Exception as e:
-        print("An exception occurred:", str(e))
+        # Get the traceback as a string
+        traceback_str = traceback.format_exc()
+        print(traceback_str)
+        # Get the line number of the exception
+        line_no = traceback.extract_tb(e.__traceback__)[-1][1]
+        print(f"Exception occurred on line {line_no}")
+        return str(e)
+
 
 
 '''

@@ -1,5 +1,6 @@
 import os
 import json
+import traceback
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -7,57 +8,223 @@ from torch.utils.data import Dataset, DataLoader
 from torchvision import models, transforms
 from PIL import Image
 
-# Parse COCO Annotations
-def parseCocoAnnotations(annotation_file, base_path):
-    try:
-        with open(annotation_file, 'r') as f:
-            annotations = json.load(f)
+class ImageClassifier:
+    def __init__(self, dataset_path, num_epochs = 1, batch_size = 32, lr = 0.0001):
+        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        self.dataset_path = dataset_path
+        self.num_epochs = num_epochs
+        self.batch_size = batch_size
+        self.lr = lr
         
-        images = annotations['images']
-        anns = annotations['annotations']
-        
-        image_paths = []
-        labels = []
-        for ann in anns:
-            image_id = ann['image_id']
-            image_info = next(img for img in images if img['id'] == image_id)
-            image_paths.append(os.path.join(base_path, image_info['file_name']))
-            labels.append(ann['category_id'])  # Assuming 'category_id' is zero-indexed
-        
-        return image_paths, labels, annotations['categories']  # Return categories for mapping
-    except Exception as e:
-        print("An exception occurred during coco annotation:", str(e))
+        self.train_loader, self.valid_loader, self.test_loader, self.num_classes = self.loadData()
+        self.model = self.createModel().to(self.device)
+        self.criterion = nn.CrossEntropyLoss()
+        self.optimizer = optim.Adam(self.model.parameters(), lr = self.lr)
+
+    # Load Data
+    def loadData(self):
+        train_image_paths, train_labels, train_categories = self.parseCocoAnnotations(
+            os.path.join(self.dataset_path, 'train', '_annotations.coco.json'), 
+            os.path.join(self.dataset_path, 'train')
+        )
+        valid_image_paths, valid_labels, _ = self.parseCocoAnnotations(
+            os.path.join(self.dataset_path, 'valid', '_annotations.coco.json'), 
+            os.path.join(self.dataset_path, 'valid')
+        )
+        test_image_paths, test_labels, _ = self.parseCocoAnnotations(
+            os.path.join(self.dataset_path, 'test', '_annotations.coco.json'), 
+            os.path.join(self.dataset_path, 'test')
+        )
+
+        category_mapping, num_classes = self.createCategoryMapping(train_categories)
+
+        transform = transforms.Compose([
+            transforms.Resize((224, 224)),
+            transforms.ToTensor(),
+            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+        ])
+
+        train_dataset = ImageClassificationDataset(train_image_paths, train_labels, transform=transform)
+        valid_dataset = ImageClassificationDataset(valid_image_paths, valid_labels, transform=transform)
+        test_dataset = ImageClassificationDataset(test_image_paths, test_labels, transform=transform)
+
+        train_loader = DataLoader(train_dataset, batch_size=self.batch_size, shuffle=True, num_workers=4)
+        valid_loader = DataLoader(valid_dataset, batch_size=self.batch_size, shuffle=False, num_workers=4)
+        test_loader = DataLoader(test_dataset, batch_size=self.batch_size, shuffle=False, num_workers=4)
+
+        return train_loader, valid_loader, test_loader, num_classes
+
+    # Parse COCO Annotations
+    def parseCocoAnnotations(self, annotation_file, base_path):
+        try:
+            with open(annotation_file, 'r') as f:
+                annotations = json.load(f)
+
+            images = annotations['images']
+            anns = annotations['annotations']
+
+            image_paths = []
+            labels = []
+            for ann in anns:
+                image_id = ann['image_id']
+                image_info = next(img for img in images if img['id'] == image_id)
+                image_paths.append(os.path.join(base_path, image_info['file_name']))
+                labels.append(ann['category_id']) 
+
+            return image_paths, labels, annotations['categories']  
+        except Exception as e:
+        # Get the traceback as a string
+            traceback_str = traceback.format_exc()
+            print(traceback_str)
+            # Get the line number of the exception
+            line_no = traceback.extract_tb(e.__traceback__)[-1][1]
+            print(f"Exception occurred on line {line_no}")
+            return str(e)
 
 
-# Create category mapping and the number of classes
-def createCategoryMapping(categories):
-    try:
-        category_mapping = {cat['id']: cat['name'] for cat in categories}
-        return category_mapping, len(category_mapping)
-    except Exception as e:
-        print("An exception occurred:", str(e))
+    # Create category mapping
+    def createCategoryMapping(self, categories):
+        try:
+            category_mapping = {cat['id']: cat['name'] for cat in categories}
+            return category_mapping, len(category_mapping)
+        except Exception as e:
+        # Get the traceback as a string
+            traceback_str = traceback.format_exc()
+            print(traceback_str)
+            # Get the line number of the exception
+            line_no = traceback.extract_tb(e.__traceback__)[-1][1]
+            print(f"Exception occurred on line {line_no}")
+            return str(e)
 
 
-# Dataset paths
-dataset_path = 'datasets/image-classify.v1i.coco'
-train_image_paths, train_labels, train_categories = parseCocoAnnotations(
-    os.path.join(dataset_path, 'train', '_annotations.coco.json'), 
-    os.path.join(dataset_path, 'train')
-)
-valid_image_paths, valid_labels, _ = parseCocoAnnotations(
-    os.path.join(dataset_path, 'valid', '_annotations.coco.json'), 
-    os.path.join(dataset_path, 'valid')
-)
-test_image_paths, test_labels, _ = parseCocoAnnotations(
-    os.path.join(dataset_path, 'test', '_annotations.coco.json'), 
-    os.path.join(dataset_path, 'test')
-)
-
-# Create category mapping
-category_mapping, num_classes = createCategoryMapping(train_categories)
+    # Create MobileNetV2 model
+    def createModel(self):
+        try:
+            model = models.mobilenet_v2(weights='DEFAULT')  
+            model.classifier[1] = nn.Linear(model.last_channel, self.num_classes)
+            return model
+        except Exception as e:
+        # Get the traceback as a string
+            traceback_str = traceback.format_exc()
+            print(traceback_str)
+            # Get the line number of the exception
+            line_no = traceback.extract_tb(e.__traceback__)[-1][1]
+            print(f"Exception occurred on line {line_no}")
+            return str(e)
 
 
-# Custom Dataset for PyTorch
+    # Train Model
+    def trainModel(self):
+        try:
+            for epoch in range(self.num_epochs):
+                self.model.train()
+                running_loss = 0.0
+                correct = 0
+                total = 0
+
+                for inputs, labels in self.train_loader:
+                    inputs, labels = inputs.to(self.device), labels.to(self.device)
+                    outputs = self.model(inputs)
+                    loss = self.criterion(outputs, labels)
+
+                    self.optimizer.zero_grad()
+                    loss.backward()
+                    self.optimizer.step()
+
+                    running_loss += loss.item() * inputs.size(0)
+                    _, predicted = torch.max(outputs, 1)
+                    correct += (predicted == labels).sum().item()
+                    total += labels.size(0)
+
+                epoch_loss = running_loss / total
+                epoch_acc = correct / total
+                print(f'Epoch {epoch+1}/{self.num_epochs}, Loss: {epoch_loss:.4f}, Accuracy: {epoch_acc:.4f}')
+                
+                self.validateModel()
+        except Exception as e:
+        # Get the traceback as a string
+            traceback_str = traceback.format_exc()
+            print(traceback_str)
+            # Get the line number of the exception
+            line_no = traceback.extract_tb(e.__traceback__)[-1][1]
+            print(f"Exception occurred on line {line_no}")
+            return str(e)
+
+
+    # Validate Model
+    def validateModel(self):
+        try:
+            self.model.eval()
+            running_loss = 0.0
+            correct = 0
+            total = 0
+
+            with torch.no_grad():
+                for inputs, labels in self.valid_loader:
+                    inputs, labels = inputs.to(self.device), labels.to(self.device)
+                    outputs = self.model(inputs)
+                    loss = self.criterion(outputs, labels)
+
+                    running_loss += loss.item() * inputs.size(0)
+                    _, predicted = torch.max(outputs, 1)
+                    correct += (predicted == labels).sum().item()
+                    total += labels.size(0)
+
+            epoch_loss = running_loss / total
+            epoch_acc = correct / total
+            print(f'Validation Loss: {epoch_loss:.4f}, Validation Accuracy: {epoch_acc:.4f}')
+        except Exception as e:
+        # Get the traceback as a string
+            traceback_str = traceback.format_exc()
+            print(traceback_str)
+            # Get the line number of the exception
+            line_no = traceback.extract_tb(e.__traceback__)[-1][1]
+            print(f"Exception occurred on line {line_no}")
+            return str(e)
+
+
+    # Test Model
+    def testModel(self):
+        try:
+            self.model.eval()
+            correct = 0
+            total = 0
+
+            with torch.no_grad():
+                for inputs, labels in self.test_loader:
+                    inputs, labels = inputs.to(self.device), labels.to(self.device)
+                    outputs = self.model(inputs)
+                    _, predicted = torch.max(outputs, 1)
+                    correct += (predicted == labels).sum().item()
+                    total += labels.size(0)
+
+            accuracy = correct / total
+            print(f'Test Accuracy: {accuracy:.4f}')
+        except Exception as e:
+        # Get the traceback as a string
+            traceback_str = traceback.format_exc()
+            print(traceback_str)
+            # Get the line number of the exception
+            line_no = traceback.extract_tb(e.__traceback__)[-1][1]
+            print(f"Exception occurred on line {line_no}")
+            return str(e)
+
+    # Save Model
+    def saveModel(self, path):
+        try:
+            torch.save(self.model.state_dict(), path)
+        except Exception as e:
+        # Get the traceback as a string
+            traceback_str = traceback.format_exc()
+            print(traceback_str)
+            # Get the line number of the exception
+            line_no = traceback.extract_tb(e.__traceback__)[-1][1]
+            print(f"Exception occurred on line {line_no}")
+            return str(e)
+
+
+# Custom Dataset class
+'''Class encapsulates the functionality required to load and preprocess images for a classification task in PyTorch.'''
 class ImageClassificationDataset(Dataset):
     def __init__(self, image_paths, labels, transform = None):
         self.image_paths = image_paths
@@ -77,138 +244,3 @@ class ImageClassificationDataset(Dataset):
         
         return image, label
 
-# Define Transforms (Preprocess: Resize, Normalize, Augment)
-IMG_SIZE = (224, 224)
-
-transform = transforms.Compose([
-    transforms.Resize(IMG_SIZE),
-    transforms.ToTensor(),
-    transforms.Normalize(mean = [0.485, 0.456, 0.406], std =  [0.229, 0.224, 0.225]),
-])
-
-train_dataset = ImageClassificationDataset(train_image_paths, train_labels, transform = transform)
-valid_dataset = ImageClassificationDataset(valid_image_paths, valid_labels, transform = transform)
-test_dataset = ImageClassificationDataset(test_image_paths, test_labels, transform = transform)
-
-# DataLoader
-train_loader = DataLoader(train_dataset, batch_size = 32, shuffle = True, num_workers = 4)
-valid_loader = DataLoader(valid_dataset, batch_size = 32, shuffle = False, num_workers = 4)
-test_loader = DataLoader(test_dataset, batch_size = 32, shuffle = False, num_workers = 4)
-
-# Define MobileNet V2 Model
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-
-def createMobilenetV2(num_classes):
-    try:
-        model = models.mobilenet_v2(weights = 'DEFAULT')  # Use the new weights argument
-        model.classifier[1] = nn.Linear(model.last_channel, num_classes)
-        return model
-    except Exception as e:
-        print("An exception occurred during load model:", str(e))
-
-
-model = createMobilenetV2(num_classes).to(device)
-
-# Define Loss Function and Optimizer
-criterion = nn.CrossEntropyLoss()
-optimizer = optim.Adam(model.parameters(), lr = 0.0001)
-
-# Train and Validate the Model
-def trainModel(model, train_loader, valid_loader, criterion, optimizer, num_epochs = 10):
-    try:
-        for epoch in range(num_epochs):
-            model.train()
-            running_loss = 0.0
-            correct = 0
-            total = 0
-            
-            for inputs, labels in train_loader:
-                inputs, labels = inputs.to(device), labels.to(device)
-                
-                # Forward pass
-                outputs = model(inputs)
-                loss = criterion(outputs, labels)
-                
-                # Backward pass
-                optimizer.zero_grad()
-                loss.backward()
-                optimizer.step()
-                
-                # Statistics
-                running_loss += loss.item() * inputs.size(0)
-                _, predicted = torch.max(outputs, 1)
-                correct += (predicted == labels).sum().item()
-                total += labels.size(0)
-            
-            epoch_loss = running_loss / total
-            epoch_acc = correct / total
-            
-            print(f'Epoch {epoch + 1}/{num_epochs}, Loss: {epoch_loss:.4f}, Accuracy: {epoch_acc:.4f}')
-            
-            validate(model, valid_loader, criterion)
-    except Exception as e:
-        print("An exception occurred during model training:", str(e))
-
-
-def validate(model, valid_loader, criterion):
-    try:
-        model.eval()
-        running_loss = 0.0
-        correct = 0
-        total = 0
-        
-        with torch.no_grad():
-            for inputs, labels in valid_loader:
-                inputs, labels = inputs.to(device), labels.to(device)
-                
-                outputs = model(inputs)
-                loss = criterion(outputs, labels)
-                
-                running_loss += loss.item() * inputs.size(0)
-                _, predicted = torch.max(outputs, 1)
-                correct += (predicted == labels).sum().item()
-                total += labels.size(0)
-        
-        epoch_loss = running_loss / total
-        epoch_acc = correct / total
-        print(f'Validation Loss: {epoch_loss:.4f}, Validation Accuracy: {epoch_acc:.4f}')
-    except Exception as e:
-        print("An exception occurred during validate model:", str(e))
-
-
-# Train the model
-trainModel(model, train_loader, valid_loader, criterion, optimizer, num_epochs = 10)
-
-# Test the Model
-def testModel(model, test_loader):
-    try:
-        model.eval()
-        correct = 0
-        total = 0
-        
-        with torch.no_grad():
-            for inputs, labels in test_loader:
-                inputs, labels = inputs.to(device), labels.to(device)
-                outputs = model(inputs)
-                _, predicted = torch.max(outputs, 1)
-                correct += (predicted == labels).sum().item()
-                total += labels.size(0)
-        
-        accuracy = correct / total
-        print(f'Test Accuracy: {accuracy:.4f}')
-    except Exception as e:
-        print("An exception occurred during test the model:", str(e))
-
-
-testModel(model, test_loader)
-
-# Save the model for future use 
-torch.save(model.state_dict(), 'mobilenet_v2_image_classifier.pth')
-
-
-
-
-'''
-This model is trained using these specific images, including screenshots from
-Chrome, Gmail, Skype, Files, Terminal, VIS, VS Code 
-'''

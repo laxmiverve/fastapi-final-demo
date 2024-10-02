@@ -1,3 +1,4 @@
+import traceback
 from fastapi import UploadFile
 import torch
 from PIL import Image
@@ -24,16 +25,23 @@ def preprocessAndExtractFeatures(image_bytes):
         features = outputs.logits.numpy()
         return features
     except Exception as e:
-        print("An exception occurred:", str(e))
+        # Get the traceback as a string
+        traceback_str = traceback.format_exc()
+        print(traceback_str)
+        # Get the line number of the exception
+        line_no = traceback.extract_tb(e.__traceback__)[-1][1]
+        print(f"Exception occurred on line {line_no}")
+        return str(e)
+
 
 
 # Compare images similar or not using model
 async def compareImagesModel(upload_file1: UploadFile, upload_file2: UploadFile):
     try:
         for upload_file in [upload_file1, upload_file2]:
-            file_extension = os.path.splitext(upload_file.filename)[1][1:].lower()  # Get the file extension without the dot
+            file_extension = os.path.splitext(upload_file.filename)[1][1:].lower() 
             if file_extension not in SUPPORTED_FORMATS:
-                return 1  # Return 1 for unsupported file type
+                return 1  
             
         image_bytes1 = await upload_file1.read()
         image_bytes2 = await upload_file2.read()
@@ -47,18 +55,15 @@ async def compareImagesModel(upload_file1: UploadFile, upload_file2: UploadFile)
         # Compute cosine similarity between features
         similarity = cosine_similarity(features1, features2)[0][0]
         similarity_percentage = similarity * 100
-        if similarity_percentage > 90:
-            message = "The images are considered similar with high confidence."
-        elif similarity_percentage > 80 and similarity_percentage <= 90:
-            message = "The images are almost similar but not completely same"
-        elif similarity_percentage > 70 and similarity_percentage <= 80:
-            message = "Not sure the images are same or not"
-        else:
-            message = "The images are not considered similar."
-        
-        return {
-            "similarity_score": round(float(similarity_percentage), 2),
-            "message": message
-        }
+        similarity_percentage = round(float(similarity_percentage), 2)
+
+        return similarity_percentage
     except Exception as e:
-        print("An exception occurred:", str(e))
+        # Get the traceback as a string
+        traceback_str = traceback.format_exc()
+        print(traceback_str)
+        # Get the line number of the exception
+        line_no = traceback.extract_tb(e.__traceback__)[-1][1]
+        print(f"Exception occurred on line {line_no}")
+        return str(e)
+

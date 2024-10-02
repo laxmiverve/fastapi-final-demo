@@ -1,3 +1,4 @@
+import traceback
 import cv2
 from fastapi import UploadFile
 import pytesseract
@@ -10,9 +11,9 @@ SUPPORTED_FORMATS = {'webp', 'png', 'dng', 'bmp', 'mpo', 'jpeg', 'tiff', 'tif', 
 # Extracting text from an image 
 def extractText(upload_file: UploadFile):
     try:
-        file_extension = os.path.splitext(upload_file.filename)[1][1:].lower()  # Get the file extension without the dot
+        file_extension = os.path.splitext(upload_file.filename)[1][1:].lower() 
         if file_extension not in SUPPORTED_FORMATS:
-            return 1  # Return 1 for unsupported file type
+            return 1  
         
         # Read the image file into memory
         file_bytes = np.frombuffer(upload_file.file.read(), np.uint8)
@@ -31,5 +32,12 @@ def extractText(upload_file: UploadFile):
         }
         return response
     except Exception as e:
-        print("An exception occurred:", str(e))
+        # Get the traceback as a string
+        traceback_str = traceback.format_exc()
+        print(traceback_str)
+        # Get the line number of the exception
+        line_no = traceback.extract_tb(e.__traceback__)[-1][1]
+        print(f"Exception occurred on line {line_no}")
+        return str(e)
+
 
