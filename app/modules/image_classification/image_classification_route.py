@@ -19,7 +19,7 @@ def predictImage(upload_file: UploadFile = File(...)):
         return ResponseSchema(status = False, response = msg["image_classification_error"], data = None)
     
 
-# Train the model on dataset
+# Train the model on custom dataset
 @router.post("/train/classification/model", summary = "Train the Image classification model")
 def modelTrainClassification(dataset_path : str, save_model_path: str):
     train_model = image_classification_service.modelTrainClassification(dataset_path = dataset_path, save_model_path = save_model_path)

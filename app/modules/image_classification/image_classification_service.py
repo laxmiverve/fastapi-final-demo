@@ -15,6 +15,7 @@ SUPPORTED_FORMATS = {'webp', 'png', 'dng', 'bmp', 'mpo', 'jpeg', 'tiff', 'tif', 
 # model_path = 'mobilenet_v2_image_classifier.pth'
 model_path = 'mobilenet_v3_image_classifier.pth'
 
+# Classify the similar image 
 def predictImage(upload_file: UploadFile):
     try:
         file_extension = os.path.splitext(upload_file.filename)[1][1:].lower()
@@ -85,6 +86,7 @@ def predictImage(upload_file: UploadFile):
 
 
 
+# Train the model on custom dataset
 def modelTrainClassification(dataset_path : str, save_model_path: str):
     try:
         # Initialize and run the ImageClassifier
