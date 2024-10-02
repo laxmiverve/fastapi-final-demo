@@ -5,7 +5,7 @@ from app.modules.image_compression import image_compression_service
 
 router = APIRouter(prefix="/api/image", tags = ["Image compresser"])
 
-# Compress the image
+# Compress the image size
 @router.post("/compress", summary = "Compress an image")
 def compressImage(upload_file: UploadFile = File(...)):
         compressed_image = image_compression_service.compressImage(upload_file = upload_file)
