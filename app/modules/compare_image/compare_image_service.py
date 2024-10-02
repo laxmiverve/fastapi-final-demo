@@ -53,12 +53,8 @@ async def compareImages(upload_file1: UploadFile, upload_file2: UploadFile):
 
         # Compute SSIM between the two images
         similarity, diff = ssim(gray_image1, gray_image2_resized, full=True)
-
-        similarity_percentage = similarity * 100
-        similarity_percentage = round(float(similarity_percentage), 2)
-
+        similarity_percentage = round(float(similarity * 100), 2)
         return similarity_percentage
-
     except Exception as e:
         # Get the traceback as a string
         traceback_str = traceback.format_exc()

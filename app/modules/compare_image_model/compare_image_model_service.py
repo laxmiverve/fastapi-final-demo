@@ -54,9 +54,7 @@ async def compareImagesModel(upload_file1: UploadFile, upload_file2: UploadFile)
         
         # Compute cosine similarity between features
         similarity = cosine_similarity(features1, features2)[0][0]
-        similarity_percentage = similarity * 100
-        similarity_percentage = round(float(similarity_percentage), 2)
-
+        similarity_percentage = round(float(similarity * 100), 2)
         return similarity_percentage
     except Exception as e:
         # Get the traceback as a string
