@@ -9,7 +9,7 @@ from torchvision import models, transforms
 from PIL import Image
 
 class ImageClassifier:
-    def __init__(self, dataset_path, num_epochs = 1, batch_size = 32, lr = 0.0001):
+    def __init__(self, dataset_path, num_epochs = 10, batch_size = 32, lr = 0.0001):
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         self.dataset_path = dataset_path
         self.num_epochs = num_epochs
