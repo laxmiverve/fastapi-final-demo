@@ -89,6 +89,9 @@ def predictImage(upload_file: UploadFile):
 # Train the model on custom dataset
 def modelTrainClassification(dataset_path : str, save_model_path: str):
     try:
+        if not save_model_path.endswith(".pth"):
+            save_model_path = save_model_path + ".pth"
+            
         # Initialize and run the ImageClassifier
         # dataset_path = 'datasets/image-classify.v1i.coco'
         classifier = ImageClassifier(dataset_path)
