@@ -16,17 +16,8 @@ BASE_URL = os.getenv("BASE_URL")
 
 SUPPORTED_FORMATS = {'webp', 'png', 'dng', 'bmp', 'mpo', 'jpeg', 'tiff', 'tif', 'pfm', 'jpg'}
 
-# build a new model from scratch
-# model = YOLO("yolov8n.yaml") 
-
 # load a pretrained model 
 model = YOLO("yolov8n.pt") 
-
-# train the model
-# model.train(data="coco128.yaml", epochs = 3)  # train the model
-
-# evaluate model performance on the validation set
-# metrics = model.val() 
 
 # Detect object in an image
 def imageDetect(background_tasks: BackgroundTasks, upload_file: UploadFile, db: Session):
