@@ -87,17 +87,17 @@ def predictImage(upload_file: UploadFile):
 
 
 # Train the model on custom dataset
-def modelTrainClassification(dataset_path : str, save_model_path: str):
+def modelTrainClassification(dataset_path : str, save_model_name: str):
     try:
-        if not save_model_path.endswith(".pth"):
-            save_model_path = save_model_path + ".pth"
+        if not save_model_name.endswith(".pth"):
+            save_model_name = save_model_name + ".pth"
             
         # Initialize and run the ImageClassifier
         # dataset_path = 'datasets/image-classify.v1i.coco'
         classifier = ImageClassifier(dataset_path)
         classifier.trainModel()
         classifier.testModel()
-        result = classifier.saveModel(save_model_path)
+        result = classifier.saveModel(save_model_name)
         return result
     except Exception as e:
         # Get the traceback as a string

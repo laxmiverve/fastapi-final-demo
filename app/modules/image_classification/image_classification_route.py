@@ -21,8 +21,8 @@ def predictImage(upload_file: UploadFile = File(...)):
 
 # Train the model on custom dataset
 @router.post("/train/classification/model", summary = "Train the Image classification model")
-def modelTrainClassification(dataset_path : str, save_model_path: str):
-    train_model = image_classification_service.modelTrainClassification(dataset_path = dataset_path, save_model_path = save_model_path)
+def modelTrainClassification(dataset_path : str, save_model_name: str):
+    train_model = image_classification_service.modelTrainClassification(dataset_path = dataset_path, save_model_name = save_model_name)
     
     if train_model is not None:
         return ResponseSchema(status = False, response = msg['model_train_failed'], data = None)

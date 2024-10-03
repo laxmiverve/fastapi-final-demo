@@ -9,7 +9,7 @@ from torchvision import models, transforms
 from PIL import Image
 
 class ImageClassifier:
-    def __init__(self, dataset_path, num_epochs = 10, batch_size = 32, lr = 0.0001):
+    def __init__(self, dataset_path, num_epochs = 1, batch_size = 32, lr = 0.0001):
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         self.dataset_path = dataset_path
         self.num_epochs = num_epochs
@@ -41,16 +41,16 @@ class ImageClassifier:
         transform = transforms.Compose([
             transforms.Resize((224, 224)),
             transforms.ToTensor(),
-            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+            transforms.Normalize(mean = [0.485, 0.456, 0.406], std = [0.229, 0.224, 0.225])
         ])
 
-        train_dataset = ImageClassificationDataset(train_image_paths, train_labels, transform=transform)
-        valid_dataset = ImageClassificationDataset(valid_image_paths, valid_labels, transform=transform)
-        test_dataset = ImageClassificationDataset(test_image_paths, test_labels, transform=transform)
+        train_dataset = ImageClassificationDataset(train_image_paths, train_labels, transform = transform)
+        valid_dataset = ImageClassificationDataset(valid_image_paths, valid_labels, transform = transform)
+        test_dataset = ImageClassificationDataset(test_image_paths, test_labels, transform = transform)
 
-        train_loader = DataLoader(train_dataset, batch_size=self.batch_size, shuffle=True, num_workers=4)
-        valid_loader = DataLoader(valid_dataset, batch_size=self.batch_size, shuffle=False, num_workers=4)
-        test_loader = DataLoader(test_dataset, batch_size=self.batch_size, shuffle=False, num_workers=4)
+        train_loader = DataLoader(train_dataset, batch_size = self.batch_size, shuffle = True, num_workers = 4)
+        valid_loader = DataLoader(valid_dataset, batch_size = self.batch_size, shuffle = False, num_workers = 4)
+        test_loader = DataLoader(test_dataset, batch_size = self.batch_size, shuffle = False, num_workers = 4)
 
         return train_loader, valid_loader, test_loader, num_classes
 
