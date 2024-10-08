@@ -14,5 +14,6 @@
     "almost_similar" : "The images are almost similar but not completely the same",
     "unsure_similarity" : "Not sure if the images are the same or not",
     "model_train_success" : "Model trained successfully",
-    "model_train_failed" : "Model train failed"
+    "model_train_failed" : "Model train failed",
+    "invalid_datapath" : "Dataset path was not valid"
 }

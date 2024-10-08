@@ -89,6 +89,9 @@ def predictImage(upload_file: UploadFile):
 # Train the model on custom dataset
 def modelTrainClassification(dataset_path : str, save_model_name: str):
     try:
+        if not os.path.exists(dataset_path):
+            return 1
+        
         if not save_model_name.endswith(".pth"):
             save_model_name = save_model_name + ".pth"
             
