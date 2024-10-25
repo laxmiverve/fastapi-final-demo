@@ -17,7 +17,7 @@ load_dotenv()
 
 app = FastAPI()
 
-# Ensure the directory exists
+# Ensure the directory exists, if not create it
 upload_images_dir = os.path.join(os.getcwd(), "uploads")
 compressed_images_dir = os.path.join(os.getcwd(), "compressed_images")
 predicted_images_dir = os.path.join(os.getcwd(), "predicted_images")
